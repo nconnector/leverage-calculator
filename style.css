@@ -107,3 +107,7 @@ span:first-child {
 .green span:last-child {
     color: var(--green);
 }
+
+.yellow {
+    color: var(--ylw);
+}
