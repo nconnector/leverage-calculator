@@ -61,7 +61,7 @@ function calculate (e) {
     }
 
     inputPositionCost.innerText = parseFloat(positionCost).toFixed(2)+"$"
-    outputQty.innerText = parseFloat(qty) //.toFixed(8)
+    outputQty.innerText = qty > 0.0001 ? parseFloat(qty).toFixed(2) : parseFloat(qty).toFixed(8)
     outputPositionLeveraged.innerText = parseFloat(positionLeveraged).toFixed(2)+"$"
     outputLiquidationPercentage.innerText = parseFloat(-1*liquidationPercentage).toFixed(2)+"%"
     outputLiquidationPriceHalf.innerText = parseFloat(liquidationPriceHalf).toFixed(2)+"$"
