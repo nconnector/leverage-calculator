@@ -28,7 +28,7 @@ function calculate (e) {
     let commissionRate = 0.01 // TODO
 
     let positionLeveraged = 0.00
-    let liquidationPercentage = 1.00 / leverage * 100 // TODO: -maintenance margin required
+    let liquidationPercentage = 1.00 / leverage // TODO: -maintenance margin required
     let liquidationPriceHalf
     let liquidationPrice
     let targetProfit1
@@ -60,10 +60,13 @@ function calculate (e) {
         targetProfit2 = (price - target2) * qty * ( 1.00 - commissionRate )
     }
 
+    if (!qty || qty > 0.0001) {
+        qty = parseFloat(qty).toFixed(0)
+    }
     inputPositionCost.innerText = parseFloat(positionCost).toFixed(2)+"$"
-    outputQty.innerText = qty > 0.0001 ? parseFloat(qty).toFixed(2) : parseFloat(qty).toFixed(8)
+    outputQty.innerText = qty
     outputPositionLeveraged.innerText = parseFloat(positionLeveraged).toFixed(2)+"$"
-    outputLiquidationPercentage.innerText = parseFloat(-1*liquidationPercentage).toFixed(2)+"%"
+    outputLiquidationPercentage.innerText = parseFloat(-100*liquidationPercentage).toFixed(1)+"%"
     outputLiquidationPriceHalf.innerText = parseFloat(liquidationPriceHalf).toFixed(2)+"$"
     outputLiquidationPrice.innerText = parseFloat(liquidationPrice).toFixed(2)+"$"
     outputTargetProfit1.innerText = parseFloat(targetProfit1).toFixed(2)+"$"

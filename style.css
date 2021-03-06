@@ -90,7 +90,7 @@ span.integer {
     padding-right: calc(0.625rem + 1ch);
 }
 span.percent {
-    padding-right: calc(0.625rem - 0.6ch);
+    padding-right: calc(0.625rem - 0.7ch);
 }
 
 label,
