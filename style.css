@@ -1,0 +1,109 @@
+:root {
+    --bg: #171e26;
+    --bg2: #1f2630;
+    --bg3: #29313c;
+    --btn: rgb(133, 142, 157);
+    --ylw: rgb(253, 194, 30);
+    --red: rgb(246, 70, 93);
+    --green: rgb(14, 203, 129);
+    --text--primary: white;
+    --text--secondary: #878f9c;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    position: relative;
+    background-color: var(--bg);
+    font-family: "Monospace", sans-serif;
+    color: var(--text--primary);
+    font-size: 0.875rem;
+    width: 100%;
+}
+
+body {
+    position: relative;
+    width: 100%;
+}
+
+h1 {
+    font-size: 16px;
+    padding: 0 5%;
+    text-align: center;
+}
+
+.container {
+    margin: 10% auto;
+    width: 350px;
+    border-radius: 5px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: 5.5rem 1fr 1fr 1fr;
+}
+
+.group {
+    margin: 2.5% 5%;
+    padding: 5%;
+    background-color: var(--bg2);
+    border-radius: 5px;
+}
+.group:first-child {
+    margin-top: 5%;
+}
+.group:last-child {
+    margin-bottom: 5%;
+}
+
+.input,
+.output {
+    width: 17rem;
+    margin: 3px auto;
+    padding: 2px 5px;
+    display: grid;
+    grid-template-columns: 8.5rem auto;
+    grid-template-rows: auto;
+    background-color: var(--bg3);
+    border-radius: 2px;
+    color: var(--btn);
+}
+
+input {
+    width: 6.25rem;
+    text-align: right;
+    justify-self: end;
+    border: 0;
+    background-color: var(--bg3);
+    color: whitesmoke;
+}
+
+span {
+    justify-self: end;
+    padding-right: 0.625rem;
+}
+span.integer {
+    padding-right: calc(0.625rem + 1ch);
+}
+span.percent {
+    padding-right: calc(0.625rem - 0.6ch);
+}
+
+label,
+span:first-child {
+    color: var(--text--secondary);
+    justify-self: end;
+    padding-right: 0.4375rem;
+}
+
+.red span:last-child {
+    color: var(--red);
+}
+
+.green span:last-child {
+    color: var(--green);
+}
