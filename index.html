@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Leverage Calculator</title>
+        <link rel="stylesheet" href="style.css" />
+        <script type="text/javascript" src="main.js" defer></script>
+    </head>
+    <body>
+        <div class="main__grid">
+            <form id="form">
+                <div class="grid__item input">
+                    <label for="input__price">Price </label>
+                    <input type="number" name="input__price" id="input__price" value="0.00" min="0" pattern="\d*" />
+                </div>
+                <div class="grid__item input">
+                    <label for="input__position__cost">Cost </label>
+                    <input type="number" name="input__position__cost" id="input__position__cost" value="0" min="0" />
+                </div>
+                <div class="grid__item input">
+                    <label for="input__leverage">Leverage </label>
+                    <input type="number" name="input__leverage" id="input__leverage" value="1" min="1" />
+                </div>
+                <div class="grid__item output white">
+                    <span>Cost Leveraged </span>
+                    <span id="output__position__leveraged">0.00</span>
+                </div>
+                <div class="grid__item output red">
+                    <span>QTY </span>
+                    <span id="output__quantity">0</span>
+                </div>
+                <div class="grid__item output red">
+                    <span>Liquidation point </span>
+                    <span id="output__liquidation__percentage">-100%</span>
+                </div>
+                <div class="grid__item output red">
+                    <span>50% Loss at </span>
+                    <span id="output__liquidation__price__half">0.00</span>
+                </div>
+                <div class="grid__item output red">
+                    <span>Liquidation at </span>
+                    <span id="output__liquidation__price">0.00</span>
+                </div>
+                <div class="grid__item input">
+                    <label for="input__target1">Target 1 </label>
+                    <input type="number" name="input__target1" id="input__target1" value="0" min="0" />
+                </div>
+                <div class="grid__item input">
+                    <label for="input__target2">Target 2 </label>
+                    <input type="number" name="input__target2" id="input__target2" value="0" min="0" />
+                </div>
+                <div class="grid__item output red">
+                    <span>Gain at T1 </span>
+                    <span id="output__profit__target1">0.00</span>
+                </div>
+                <div class="grid__item output red">
+                    <span>Gain at T2 </span>
+                    <span id="output__profit__target2">0.00</span>
+                </div>
+                <div class="grid__item input">
+                    <input type="submit" value="Submit" />
+                </div>
+            </form>
+        </div>
+    </body>
+</html>
