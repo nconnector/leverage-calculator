@@ -28,7 +28,7 @@ function calculate (e) {
     let commissionRate = 0.01 // TODO
 
     let positionLeveraged = 0.00
-    let liquidationPercentage = -1.00 / leverage // TODO: -maintenance margin required
+    let liquidationPercentage = 1.00 / leverage * 100 // TODO: -maintenance margin required
     let liquidationPriceHalf
     let liquidationPrice
     let targetProfit1
