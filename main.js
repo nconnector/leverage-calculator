@@ -60,8 +60,12 @@ function calculate (e) {
         targetProfit2 = (price - target2) * qty * ( 1.00 - commissionRate )
     }
 
-    if (!qty || qty > 0.0001) {
+    if (qty == 0) {
         qty = parseFloat(qty).toFixed(0)
+    } else if (qty > 0.0001) {
+        qty = parseFloat(qty).toFixed(2)
+    } else {
+        qty = parseFloat(qty).toFixed(8)
     }
     inputPositionCost.innerText = parseFloat(positionCost).toFixed(2)+"$"
     outputQty.innerText = qty
