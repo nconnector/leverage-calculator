@@ -40,13 +40,13 @@ class Variable {
     get valueStr() {
         switch(this.format) {
             case 'currency':
-                return parseFloat(this.value).toFixed(2) + ' $'
+                return round(this.value, -2) + ' $'
             case 'percent':
-                return parseFloat(this.value*-100).toFixed(1) + ' %'
+                return round(this.value*-100, -1) + ' %'
             case 'qty':
                 if (this.value == 0) {return 0}
-                else if (this.value > 0.0001) {return parseFloat(this.value).toFixed(2)} 
-                else {return parseFloat(this.value).toFixed(8)} 
+                else if (this.value > 0.0001) {return round(this.value, -2)} 
+                else {return round(this.value, -8)} 
             default:
                 return this.value
         }
@@ -60,11 +60,11 @@ class Variable {
             this.htmlDiv.lastElementChild.innerText = this.valueStr
         } else {
             if (!latestInput || latestInput == this.htmlDiv.lastElementChild) {
-                console.log('active input')
-                this.htmlDiv.lastElementChild.value = newValue
+                // this is the element currently being edited, value is kept
+                this.htmlDiv.lastElementChild.value = this.value
             } else {
-                console.log('rounding up')
-                this.htmlDiv.lastElementChild.value = parseFloat(newValue).toFixed(2)
+                // any other element, needs to be rounded
+                this.htmlDiv.lastElementChild.value = this.value //todo: round inputs
             }
         }
     }
@@ -90,11 +90,11 @@ class Variable {
             valueField.value = this.value
             if (this.min >= 0) valueField.min = this.min
             if (this.max >= 0) valueField.max = this.max
-            if (this.step >=0 ) valueField.step = this.step
+            if (this.step >= 0 ) valueField.step = this.step
             valueField.inputMode = 'decimal'
             valueField.addEventListener('input', (e) => {
                 latestInput = e.target
-                this.setVal = valueField.value
+                this.value = valueField.value // update the back-end value for further calculations
             })
         }
         // special class for QTY
@@ -130,7 +130,7 @@ let qty = new Variable('QTY', 'input', 'white', 0, 'qty', 0, undefined, 0.1)
 // Group 2 - red
 let liquidationPercentage = new Variable('Liquidation %', 'output', 'red', 0.00, 'percent')
 let liquidationPriceHalf = new Variable('Half loss at', 'output', 'red', 0.00, 'currency')
-let liquidationPrice = new Variable('Liquidation price', 'input', 'red', 0.00, 'currency', 0, undefined, 0.01)
+let liquidationPrice = new Variable('Liquidation price', 'input', 'red', 0, 'currency', 0, undefined, 0.01)
 // Group 3 - green
 let targetPrice1 = new Variable('Target 1', 'input', 'green', 0.00, 'currency', 0, undefined, 0.001)
 let targetPrice2 = new Variable('Target 2', 'input', 'green', 0.00, 'currency', 0, undefined, 0.001)
@@ -141,41 +141,51 @@ let commissionRate = {'v': 0.01} // todo
 
 
 
-// MATH
+// CALCULATIONS
+
 let latestInput
+
+function math(str) {
+    // exact-math.js is imported
+    return exactMath.formula(str)}
+function round(str, places) {
+    // exact-math.js is imported
+    return exactMath.round(str, places)}
+
 function calculate(e) {
     switch(latestInput) {
         case qty.htmlDiv.lastElementChild:
             // if QTY is changed
-            positionCost.setVal = price.v * qty.v / leverage.v
-            positionLeveraged.setVal = price.v * qty.v
+            positionCost.setVal = math(`${price.v} * ${qty.v} / ${leverage.v}`)
+            positionLeveraged.setVal = math(`${price.v} * ${qty.v}`)
             break
         case liquidationPrice.htmlDiv.lastElementChild:
             // if Liquidation Price is changed; calculating Leverage
-            leverage.setVal = Math.max(1, 1 / (1 - liquidationPrice.v / price.v ))
-            positionLeveraged.setVal = positionCost.v * leverage.v
-            qty.setVal = positionLeveraged.v / price.v
+            leverage.setVal = math(`1 / (1 - ${liquidationPrice.v} / ${price.v})`)
+            //leverage.setVal = Math.max(1, 1 / (1 - liquidationPrice.v / price.v ))
+            positionLeveraged.setVal = math(`${positionCost.v} * ${leverage.v}`)
+            qty.setVal = math(`${positionLeveraged.v} / ${price.v}`)
             break
         default:
             // if Leverage, PositionCost or Price is changed
-            positionLeveraged.setVal = positionCost.v * leverage.v
-            qty.setVal = positionLeveraged.v / price.v
+            positionLeveraged.setVal = math(`${positionCost.v} * ${leverage.v}`)
+            qty.setVal = math(`${positionLeveraged.v} / ${price.v}`)
             break
 
     }
     
-    liquidationPercentage.setVal = 1.00 / leverage.v
+    liquidationPercentage.setVal = math(`1.00 / ${leverage.v}`)
 
     if (long.v) { // long position
-        liquidationPriceHalf.setVal = price.v * ( 1.00 - liquidationPercentage.v/2 )
-        liquidationPrice.setVal = price.v * ( 1.00 - liquidationPercentage.v )
-        targetProfit1.setVal = (targetPrice1.v - price.v) * qty.v * ( 1.00 - commissionRate.v )
-        targetProfit2.setVal = (targetPrice2.v - price.v) * qty.v * ( 1.00 - commissionRate.v )
+        liquidationPriceHalf.setVal = math(`${price.v} * (1.00 - ${liquidationPercentage.v}/2)`)
+        liquidationPrice.setVal = math(`${price.v} * (1.00 - ${liquidationPercentage.v})`)
+        targetProfit1.setVal = math(`(${targetPrice1.v} - ${price.v}) * ${qty.v} * (1.00 - ${commissionRate.v})`)
+        targetProfit2.setVal = math(`${targetPrice2.v} - ${price.v}) * ${qty.v} * ( 1.00 - ${commissionRate.v})`)
     } else { // short position
-        liquidationPriceHalf.setVal = price.v * ( 1.00 + liquidationPercentage.v/2 )
-        liquidationPrice.setVal = price.v * ( 1.00 + liquidationPercentage.v )
-        targetProfit1.setVal = (price.v - targetPrice1.v) * qty.v * ( 1.00 - commissionRate.v )
-        targetProfit2.setVal = (price.v - targetPrice2.v) * qty.v * ( 1.00 - commissionRate.v )
+        liquidationPriceHalf.setVal = math(`${price.v} * (1.00 + ${liquidationPercentage.v}/2)`)
+        liquidationPrice.setVal = math(`${price.v} * (1.00 + ${liquidationPercentage.v})`)
+        targetProfit1.setVal = math(`(${price.v} - ${targetPrice1.v}) * ${qty.v} * (1.00 - ${commissionRate.v})`)
+        targetProfit2.setVal = math(`${price.v} - ${targetPrice2.v}) * ${qty.v} * ( 1.00 - ${commissionRate.v})`)
     }
 
     // set cookies
