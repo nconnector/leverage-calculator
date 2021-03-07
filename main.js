@@ -1,88 +1,186 @@
-
-// whole form
 let form = document.getElementById('form')
-//inputs
-let inputPrice = document.getElementById('input__price')
-let inputLeverage = document.getElementById('input__leverage')
-let inputPositionCost = document.getElementById('input__position__cost')
-let inputTargetPrice1 = document.getElementById('input__target1')
-let inputTargetPrice2 = document.getElementById('input__target2')
-// outputs
-let outputQty = document.getElementById('output__quantity')
-let outputPositionCost = document.getElementById('output__position__cost')
-let outputPositionLeveraged = document.getElementById('output__position__leveraged')
-let outputLiquidationPercentage = document.getElementById('output__liquidation__percentage')
-let outputLiquidationPriceHalf = document.getElementById('output__liquidation__price__half')
-let outputLiquidationPrice = document.getElementById('output__liquidation__price')
-let outputTargetProfit1 = document.getElementById('output__profit__target1')
-let outputTargetProfit2 = document.getElementById('output__profit__target2')
+const groupWhite = document.querySelector(".group.white")
+const groupRed = document.querySelector(".group.red")
+const groupGreen = document.querySelector(".group.green")
 
-function calculate (e) {
-    let long = true
-    let price = parseFloat(inputPrice.value)
-    let positionCost = parseFloat(inputPositionCost.value)
-    let leverage = parseInt(inputLeverage.value)
-    let qty = 0
-    let target1 = parseFloat(inputTargetPrice1.value)
-    let target2 = parseFloat(inputTargetPrice2.value)
-    let commissionRate = 0.01 // TODO
-
-    let positionLeveraged = 0.00
-    let liquidationPercentage = 1.00 / leverage // TODO: -maintenance margin required
-    let liquidationPriceHalf
-    let liquidationPrice
-    let targetProfit1
-    let targetProfit2
-
-    if (qty && !positionCost) {
-        // if QTY is provided
-        positionCost = price * qty / leverage
-        positionLeveraged = price * qty
-        console.log('QTY provided, price not')
-    } else if (!qty && positionCost) {
-        // if PositionCost is provided
-        positionLeveraged = positionCost * leverage
-        qty = positionLeveraged / price
-        console.log('price provided, QTY not')
-    } else {
-        // raise error if both
-        console.warn(`error in positionCost and QTY inputs\npositionCost: ${positionCost}\nQTY: ${qty}`)}
+class Variable {
+    // HTML representation as .grid__item
+    // value representation for calculations
+    //
+    // TODO:
+    //     setter to move to another group?
+    //     setter when type is changed
+    //   ! setter when value is changed to adjust HTML
     
-    if (long) { // long position
-        liquidationPriceHalf = price * ( 1.00 - liquidationPercentage/2 )
-        liquidationPrice = price * ( 1.00 - liquidationPercentage )
-        targetProfit1 = (target1 - price) * qty * ( 1.00 - commissionRate )
-        targetProfit2 = (target2 - price) * qty * ( 1.00 - commissionRate )
-    } else { // short position
-        liquidationPriceHalf = price * ( 1.00 + liquidationPercentage/2 )
-        liquidationPrice = price * ( 1.00 + liquidationPercentage )
-        targetProfit1 = (price - target1) * qty * ( 1.00 - commissionRate )
-        targetProfit2 = (price - target2) * qty * ( 1.00 - commissionRate )
+    constructor(label, type, group, value, format, min, max, step) {
+        // label: 
+        //    text displayed in HTML
+        // id: 
+        //    #id
+        // type: 
+        //    input, range, boolean, output
+        // group:
+        //    white, red, green
+        // format:
+        //    $, %, int
+
+        this.label = label
+        this.type = type
+        this.group = group
+        this.value = value
+        this.format = format
+
+        this.min = min
+        this.max = max
+        this.step = step
+
+        this.id = label.replace(' ', '_').toLowerCase()
+        this.htmlDiv = this.createDiv()
+    }
+    get valueStr() {
+        switch(this.format) {
+            case 'currency':
+                return parseFloat(this.value).toFixed(2) + ' $'
+            case 'percent':
+                return parseFloat(this.value*-100).toFixed(1) + ' %'
+            case 'qty':
+                if (this.value == 0) {return 0}
+                else if (this.value > 0.0001) {return parseFloat(this.value).toFixed(2)} 
+                else {return parseFloat(this.value).toFixed(8)} 
+            default:
+                return this.value
+        }
+    }
+    get v() {
+        return this.value
+    }
+    set setVal(newValue) {
+        this.value = newValue
+        if (this.type === 'output') {
+            this.htmlDiv.lastElementChild.innerText = this.valueStr
+        } else {
+            this.htmlDiv.lastElementChild.value = this.value
+        }
     }
 
-    if (qty == 0) {
-        qty = parseFloat(qty).toFixed(0)
-    } else if (qty > 0.0001) {
-        qty = parseFloat(qty).toFixed(2)
-    } else {
-        qty = parseFloat(qty).toFixed(8)
+    createDiv() {
+        let div = document.createElement('div')
+        let labelField
+        let valueField
+        div.classList.add('grid__item', this.type)
+        if (this.type === 'output') {
+            labelField = document.createElement('span')
+            labelField.innerText = this.label
+            valueField = document.createElement('span')
+            valueField.innerText = this.valueStr
+            
+        } else { // add range and switch
+            labelField = document.createElement('label')
+            labelField.setAttribute('for', this.id)
+            labelField.innerText = this.label
+            valueField = document.createElement('input')
+            valueField.id = this.id
+            valueField.type = 'number'
+            valueField.value = this.value
+            if (this.min >= 0) valueField.min = this.min
+            if (this.max >= 0) valueField.max = this.max
+            if (this.step >=0 ) valueField.step = this.step
+            valueField.inputMode = 'decimal'
+            valueField.addEventListener('input', () => {
+                this.setVal = valueField.value
+            })
+        }
+        // special class for QTY
+        if (this.label === 'QTY') {valueField.className='yellow'}
+        valueField.classList.add(this.format)
+        
+        // append DIV to its group
+        div.append(labelField)
+        div.append(valueField)
+        switch(this.group) {
+            case 'red':
+                groupRed.append(div)
+                break
+            case 'green':
+                groupGreen.append(div)
+                break
+            case 'white':
+                groupWhite.append(div)
+                break
+        }
+
+        return div
+        
     }
-    inputPositionCost.innerText = parseFloat(positionCost).toFixed(2)+"$"
-    outputQty.innerText = qty
-    outputPositionLeveraged.innerText = parseFloat(positionLeveraged).toFixed(2)+"$"
-    outputLiquidationPercentage.innerText = parseFloat(-100*liquidationPercentage).toFixed(1)+"%"
-    outputLiquidationPriceHalf.innerText = parseFloat(liquidationPriceHalf).toFixed(2)+"$"
-    outputLiquidationPrice.innerText = parseFloat(liquidationPrice).toFixed(2)+"$"
-    outputTargetProfit1.innerText = parseFloat(targetProfit1).toFixed(2)+"$"
-    outputTargetProfit2.innerText = parseFloat(targetProfit2).toFixed(2)+"$"
+}   
+
+// Group 1 - white
+let price = new Variable('Price', 'input', 'white', 0.00, 'currency', 0, undefined, 0.00001)
+let positionCost = new Variable('Position Cost', 'input', 'white', 0.00, 'currency', 0, undefined, 0.01)
+let leverage = new Variable('Leverage', 'input', 'white', 1, 'qty', 1, 150, 1)
+let positionLeveraged = new Variable('Cost Leveraged', 'output', 'white', 0.00, 'currency')
+let qty = new Variable('QTY', 'output', 'white', 0, 'qty')
+// Group 2 - red
+let liquidationPercentage = new Variable('Liquidation %', 'output', 'red', 0.00, 'percent')
+let liquidationPriceHalf = new Variable('50% loss at', 'output', 'red', 0.00, 'currency')
+let liquidationPrice = new Variable('Liquidation point', 'output', 'red', 0.00, 'currency')
+// Group 3 - green
+let targetPrice1 = new Variable('Target 1', 'input', 'green', 0.00, 'currency', 0, undefined, 0.00001)
+let targetPrice2 = new Variable('Target 2', 'input', 'green', 0.00, 'currency', 0, undefined, 0.00001)
+let targetProfit1 = new Variable('Price', 'output', 'green', 0.00, 'currency')
+let targetProfit2 = new Variable('Price', 'output', 'green', 0.00, 'currency')
+let long = {'v':true} // TODO: VARIABLE THIS
+let commissionRate = {'v': 0.01} // todo
+
+
+
+// MATH
+let latestInput
+function calculate(e) {
+    latestInput = e ? e.target : null
+    switch(latestInput) {
+        case qty.htmlDiv.lastElementChild:
+            // if QTY is provided
+            positionCost.setVal = price.v * qty.v / leverage.v
+            positionLeveraged.setVal = price.v * qty.v
+            console.log('QTY was the last input')
+            break
+        case liquidationPrice.htmlDiv.lastElementChild:
+            // if positionCost is provided
+            positionLeveraged.setVal = positionCost.v * leverage.v
+            qty.setVal = positionLeveraged.v / price.v
+            console.log('price was the last input')
+            break
+        default:
+            // if positionCost is provided
+            positionLeveraged.setVal = positionCost.v * leverage.v
+            qty.setVal = positionLeveraged.v / price.v
+            console.log('price was the last input')
+            break
+
+    }
+    
+    liquidationPercentage.setVal = 1.00 / leverage.v
+
+    if (long.v) { // long position
+        liquidationPriceHalf.setVal = price.v * ( 1.00 - liquidationPercentage.v/2 )
+        liquidationPrice.setVal = price.v * ( 1.00 - liquidationPercentage.v )
+        targetProfit1.setVal = (targetPrice1.v - price.v) * qty.v * ( 1.00 - commissionRate.v )
+        targetProfit2.setVal = (targetPrice2.v - price.v) * qty.v * ( 1.00 - commissionRate.v )
+    } else { // short position
+        liquidationPriceHalf.setVal = price.v * ( 1.00 + liquidationPercentage.v/2 )
+        liquidationPrice.setVal = price.v * ( 1.00 + liquidationPercentage.v )
+        targetProfit1.setVal = (price.v - targetPrice1.v) * qty.v * ( 1.00 - commissionRate.v )
+        targetProfit2.setVal = (price.v - targetPrice2.v) * qty.v * ( 1.00 - commissionRate.v )
+    }
 
     // set cookies
     let cookies = {
-        'price': price,
-        'positionCost': positionCost,
-        'leverage': leverage,
-        'target1': target1,
-        'target2': target2 
+        'price': price.v,
+        'positionCost': positionCost.v,
+        'leverage': leverage.v,
+        'targetPrice1': targetPrice1.v,
+        'targetPrice2': targetPrice2.v 
     }
     setCookies(cookies)
     
@@ -91,11 +189,13 @@ function calculate (e) {
 }
 
 
+
 // COOKIES
 
 function setCookies(cookies) {
     // expiry in 30 days
-    let expiry = new Date(new Date().getTime()+30*24*3600*1000)
+    let expiry = new Date(new Date()
+        .getTime()+30*24*3600*1000)
         .toGMTString() 
     document.cookie = `formdata=${JSON.stringify(cookies)}; expires=${expiry}`
 }
@@ -104,13 +204,14 @@ function getCookies() {
     let cookies = document.cookie.match(new RegExp('formdata' + '=([^;]+)'));
     cookies && (cookies = JSON.parse(cookies[1]))
     if (cookies) {
-        inputPrice.value = cookies['price']
-        inputPositionCost.value = cookies['positionCost']
-        inputLeverage.value = cookies['leverage']
-        inputTargetPrice1.value = cookies['target1']
-        inputTargetPrice2.value = cookies['target2']
+        price.setVal = cookies['price']
+        positionCost.setVal = cookies['positionCost']
+        leverage.setVal = cookies['leverage']
+        targetPrice1.setVal = cookies['targetPrice1']
+        targetPrice2.setVal = cookies['targetPrice2']
     }
 }
+
 
 
 // ONLOAD
@@ -119,9 +220,9 @@ getCookies()
 calculate()
 
 
+
 // add listeners
 
-form.addEventListener('submit', calculate)
 for (inp of form.elements) {
-    inp.addEventListener('input', calculate)
+    inp.addEventListener('input', (e) => calculate(e, inp))
 }
