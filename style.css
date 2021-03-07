@@ -6,7 +6,7 @@
     --ylw: rgb(253, 194, 30);
     --red: rgb(246, 70, 93);
     --green: rgb(14, 203, 129);
-    --text--primary: white;
+    --text--primary: whitesmoke;
     --text--secondary: #878f9c;
 }
 
@@ -29,22 +29,35 @@ body {
     width: 100%;
 }
 
+.container {
+    margin: auto;
+    width: 350px;
+    border-radius: 5px;
+}
+
 h1 {
     font-size: 16px;
-    padding: 0 5%;
+    padding: 0 5px;
+    margin-bottom: 10px;
     text-align: center;
 }
 
-.container {
-    margin: 10% auto;
-    width: 350px;
-    border-radius: 5px;
+.legend {
+    display: block;
+    width: 17rem;
+    margin: auto;
+    padding: 5px 7px;
+    text-align: center;
+    background-color: var(--bg3);
+    border-radius: 2px;
+    color: var(--btn);
+    font-size: 0.8rem;
 }
 
 .grid {
     display: grid;
     grid-template-columns: auto;
-    grid-template-rows: 5.5rem 1fr 1fr 1fr;
+    grid-template-rows: auto 1fr 1fr 1fr;
 }
 
 .group {
@@ -110,4 +123,10 @@ span:first-child {
 
 .yellow {
     color: var(--ylw);
+}
+
+@media only screen and (min-height: 750px) {
+    .container {
+        margin: 10% auto;
+    }
 }

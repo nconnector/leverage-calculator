@@ -59,10 +59,12 @@ class Variable {
         if (this.type === 'output') {
             this.htmlDiv.lastElementChild.innerText = this.valueStr
         } else {
-            if (this.htmlDiv.lastElementChild == latestInput) {
-                this.htmlDiv.lastElementChild.value = this.value
+            if (!latestInput || latestInput == this.htmlDiv.lastElementChild) {
+                console.log('active input')
+                this.htmlDiv.lastElementChild.value = newValue
             } else {
-                this.htmlDiv.lastElementChild.value = parseFloat(this.value).toFixed(2)
+                console.log('rounding up')
+                this.htmlDiv.lastElementChild.value = parseFloat(newValue).toFixed(2)
             }
         }
     }
@@ -90,11 +92,9 @@ class Variable {
             if (this.max >= 0) valueField.max = this.max
             if (this.step >=0 ) valueField.step = this.step
             valueField.inputMode = 'decimal'
-            valueField.addEventListener('input', () => {
+            valueField.addEventListener('input', (e) => {
+                latestInput = e.target
                 this.setVal = valueField.value
-            })
-            valueField.addEventListener('focusout', () => {
-                this.setVal = this.value
             })
         }
         // special class for QTY
@@ -144,7 +144,6 @@ let commissionRate = {'v': 0.01} // todo
 // MATH
 let latestInput
 function calculate(e) {
-    latestInput = e ? e.target : null
     switch(latestInput) {
         case qty.htmlDiv.lastElementChild:
             // if QTY is changed
