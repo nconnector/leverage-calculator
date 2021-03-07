@@ -100,11 +100,11 @@ span:first-child {
     padding-right: 0.4375rem;
 }
 
-.red span:last-child {
+.red :last-child {
     color: var(--red);
 }
 
-.green span:last-child {
+.green :last-child {
     color: var(--green);
 }
 

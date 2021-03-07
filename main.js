@@ -55,11 +55,15 @@ class Variable {
         return this.value
     }
     set setVal(newValue) {
-        this.value = newValue
+        this.value = newValue ? newValue : 0
         if (this.type === 'output') {
             this.htmlDiv.lastElementChild.innerText = this.valueStr
         } else {
-            this.htmlDiv.lastElementChild.value = this.value
+            if (this.htmlDiv.lastElementChild == latestInput) {
+                this.htmlDiv.lastElementChild.value = this.value
+            } else {
+                this.htmlDiv.lastElementChild.value = parseFloat(this.value).toFixed(2)
+            }
         }
     }
 
@@ -89,6 +93,9 @@ class Variable {
             valueField.addEventListener('input', () => {
                 this.setVal = valueField.value
             })
+            valueField.addEventListener('focusout', () => {
+                this.setVal = this.value
+            })
         }
         // special class for QTY
         if (this.label === 'QTY') {valueField.className='yellow'}
@@ -115,20 +122,20 @@ class Variable {
 }   
 
 // Group 1 - white
-let price = new Variable('Price', 'input', 'white', 0.00, 'currency', 0, undefined, 0.00001)
-let positionCost = new Variable('Position Cost', 'input', 'white', 0.00, 'currency', 0, undefined, 0.01)
+let price = new Variable('Price', 'input', 'white', 0.00, 'currency', 0, undefined, 0.001)
+let positionCost = new Variable('Position Cost', 'input', 'white', 0.00, 'currency', 0, undefined, 0.001)
 let leverage = new Variable('Leverage', 'input', 'white', 1, 'qty', 1, 150, 1)
 let positionLeveraged = new Variable('Cost Leveraged', 'output', 'white', 0.00, 'currency')
-let qty = new Variable('QTY', 'output', 'white', 0, 'qty')
+let qty = new Variable('QTY', 'input', 'white', 0, 'qty', 0, undefined, 0.1)
 // Group 2 - red
 let liquidationPercentage = new Variable('Liquidation %', 'output', 'red', 0.00, 'percent')
-let liquidationPriceHalf = new Variable('50% loss at', 'output', 'red', 0.00, 'currency')
-let liquidationPrice = new Variable('Liquidation point', 'output', 'red', 0.00, 'currency')
+let liquidationPriceHalf = new Variable('Half loss at', 'output', 'red', 0.00, 'currency')
+let liquidationPrice = new Variable('Liquidation price', 'input', 'red', 0.00, 'currency', 0, undefined, 0.01)
 // Group 3 - green
-let targetPrice1 = new Variable('Target 1', 'input', 'green', 0.00, 'currency', 0, undefined, 0.00001)
-let targetPrice2 = new Variable('Target 2', 'input', 'green', 0.00, 'currency', 0, undefined, 0.00001)
-let targetProfit1 = new Variable('Price', 'output', 'green', 0.00, 'currency')
-let targetProfit2 = new Variable('Price', 'output', 'green', 0.00, 'currency')
+let targetPrice1 = new Variable('Target 1', 'input', 'green', 0.00, 'currency', 0, undefined, 0.001)
+let targetPrice2 = new Variable('Target 2', 'input', 'green', 0.00, 'currency', 0, undefined, 0.001)
+let targetProfit1 = new Variable('Gain at Target 1', 'output', 'green', 0.00, 'currency')
+let targetProfit2 = new Variable('Gain at Target 2', 'output', 'green', 0.00, 'currency')
 let long = {'v':true} // TODO: VARIABLE THIS
 let commissionRate = {'v': 0.01} // todo
 
@@ -140,22 +147,18 @@ function calculate(e) {
     latestInput = e ? e.target : null
     switch(latestInput) {
         case qty.htmlDiv.lastElementChild:
-            // if QTY is provided
+            // if QTY is changed
             positionCost.setVal = price.v * qty.v / leverage.v
             positionLeveraged.setVal = price.v * qty.v
-            console.log('QTY was the last input')
             break
         case liquidationPrice.htmlDiv.lastElementChild:
-            // if positionCost is provided
-            positionLeveraged.setVal = positionCost.v * leverage.v
-            qty.setVal = positionLeveraged.v / price.v
-            console.log('price was the last input')
+            // if Liquidation Price is changed; calculating Leverage
+            leverage.setVal = Math.max(1, 1 / (1 - liquidationPrice.v / price.v ))
             break
         default:
-            // if positionCost is provided
+            // if Leverage, PositionCost or Price is changed
             positionLeveraged.setVal = positionCost.v * leverage.v
             qty.setVal = positionLeveraged.v / price.v
-            console.log('price was the last input')
             break
 
     }
