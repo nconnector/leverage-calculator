@@ -154,6 +154,8 @@ function calculate(e) {
         case liquidationPrice.htmlDiv.lastElementChild:
             // if Liquidation Price is changed; calculating Leverage
             leverage.setVal = Math.max(1, 1 / (1 - liquidationPrice.v / price.v ))
+            positionLeveraged.setVal = positionCost.v * leverage.v
+            qty.setVal = positionLeveraged.v / price.v
             break
         default:
             // if Leverage, PositionCost or Price is changed
