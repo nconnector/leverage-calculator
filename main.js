@@ -148,7 +148,7 @@ function round(str, places) {
     return exactMath.round(str, places)}
 
 function calculate(e) {
-    console.log(`latest input: ${latestInput}`)
+    console.log(`%clatest input: ${latestInput}`, 'color:white; background:#222; padding: 1px 2px')
     switch(latestInput) {
         case qty.id:
             // if QTY is changed
