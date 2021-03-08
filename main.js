@@ -73,7 +73,7 @@ class Variable {
         // set back-end value
         this.value = newValue ? newValue : 0
         // print HTML value
-        if (!latestInput || latestInput == this.id) {
+        if (latestInput == this.id) {
             console.log(this.id, newValue, 'active')
             // this is the element currently being edited, value is kept
             this.htmlDiv.lastElementChild.value = this.value
@@ -186,7 +186,7 @@ function calculate(e) {
         'positionCost': positionCost.v,
         'leverage': leverage.v,
         'targetPrice1': targetPrice1.v,
-        'targetPrice2': targetPrice2.v 
+        'targetPrice2': targetPrice2.v
     }
     setCookies(cookies)
     
