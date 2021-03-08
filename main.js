@@ -38,34 +38,50 @@ class Variable {
         this.htmlDiv = this.createDiv()
     }
     get valueStr() {
+        // if symbol is true, add symbols
+        let postfix = ''
+        let resp
         switch(this.format) {
             case 'currency':
-                return round(this.value, -2) + ' $'
+                resp = round(this.value, -2)
+                postfix = ' $'
+                break
             case 'percent':
-                return round(this.value*-100, -1) + ' %'
+                resp = round(this.value*-100, -1)
+                postfix = ' %'
+                break
             case 'qty':
-                if (this.value == 0) {return 0}
-                else if (this.value > 0.0001) {return round(this.value, -2)} 
-                else {return round(this.value, -8)} 
+                if (this.value == 0) {resp = 0}
+                else if (this.value >= 0.1) {resp = round(this.value, -1)} 
+                else if (this.value >= 0.01) {resp = round(this.value, -2)} 
+                else if (this.value >= 0.001) {resp = round(this.value, -3)} 
+                else if (this.value >= 0.0001) {resp = round(this.value, -4)} 
+                else {resp = round(this.value, -8)} 
+                break
             default:
-                return this.value
+                resp = this.value
         }
+        if (this.type == 'output') {
+            resp += postfix
+        }
+        return resp
     }
     get v() {
         return this.value
     }
     set setVal(newValue) {
+        // set back-end value
         this.value = newValue ? newValue : 0
-        if (this.type === 'output') {
-            this.htmlDiv.lastElementChild.innerText = this.valueStr
+        // print HTML value
+        if (!latestInput || latestInput == this.id) {
+            console.log(this.id, newValue, 'active')
+            // this is the element currently being edited, value is kept
+            this.htmlDiv.lastElementChild.value = this.value
         } else {
-            if (!latestInput || latestInput == this.htmlDiv.lastElementChild) {
-                // this is the element currently being edited, value is kept
-                this.htmlDiv.lastElementChild.value = this.value
-            } else {
-                // any other element, needs to be rounded
-                this.htmlDiv.lastElementChild.value = this.value //todo: round inputs
-            }
+            console.log(this.id, newValue, 'rounding')
+            // any other element, needs to be rounded
+            this.htmlDiv.lastElementChild.value = this.valueStr
+            this.htmlDiv.lastElementChild.innerText = this.valueStr
         }
     }
 
@@ -93,7 +109,7 @@ class Variable {
             if (this.step >= 0 ) valueField.step = this.step
             valueField.inputMode = 'decimal'
             valueField.addEventListener('input', (e) => {
-                latestInput = e.target
+                latestInput = e.target.id
                 this.value = valueField.value // update the back-end value for further calculations
             })
         }
@@ -115,31 +131,10 @@ class Variable {
                 groupWhite.append(div)
                 break
         }
-
         return div
         
     }
-}   
-
-// Group 1 - white
-let price = new Variable('Price', 'input', 'white', 0.00, 'currency', 0, undefined, 0.001)
-let positionCost = new Variable('Position Cost', 'input', 'white', 0.00, 'currency', 0, undefined, 0.001)
-let leverage = new Variable('Leverage', 'input', 'white', 1, 'qty', 1, 150, 1)
-let positionLeveraged = new Variable('Cost Leveraged', 'output', 'white', 0.00, 'currency')
-let qty = new Variable('QTY', 'input', 'white', 0, 'qty', 0, undefined, 0.1)
-// Group 2 - red
-let liquidationPercentage = new Variable('Liquidation %', 'output', 'red', 0.00, 'percent')
-let liquidationPriceHalf = new Variable('Half loss at', 'output', 'red', 0.00, 'currency')
-let liquidationPrice = new Variable('Liquidation price', 'input', 'red', 0, 'currency', 0, undefined, 0.01)
-// Group 3 - green
-let targetPrice1 = new Variable('Target 1', 'input', 'green', 0.00, 'currency', 0, undefined, 0.001)
-let targetPrice2 = new Variable('Target 2', 'input', 'green', 0.00, 'currency', 0, undefined, 0.001)
-let targetProfit1 = new Variable('Gain at Target 1', 'output', 'green', 0.00, 'currency')
-let targetProfit2 = new Variable('Gain at Target 2', 'output', 'green', 0.00, 'currency')
-let long = {'v':true} // TODO: VARIABLE THIS
-let commissionRate = {'v': 0.01} // todo
-
-
+}
 
 // CALCULATIONS
 
@@ -153,40 +148,37 @@ function round(str, places) {
     return exactMath.round(str, places)}
 
 function calculate(e) {
+    console.log(`latest input: ${latestInput}`)
     switch(latestInput) {
-        case qty.htmlDiv.lastElementChild:
+        case qty.id:
             // if QTY is changed
             positionCost.setVal = math(`${price.v} * ${qty.v} / ${leverage.v}`)
             positionLeveraged.setVal = math(`${price.v} * ${qty.v}`)
             break
-        case liquidationPrice.htmlDiv.lastElementChild:
+        case liquidationPrice.id:
             // if Liquidation Price is changed; calculating Leverage
-            leverage.setVal = math(`1 / (1 - ${liquidationPrice.v} / ${price.v})`)
-            //leverage.setVal = Math.max(1, 1 / (1 - liquidationPrice.v / price.v ))
+            leverage.setVal = Math.max(1, math(`1 / (1 - ${liquidationPrice.v} / ${price.v})`))
             positionLeveraged.setVal = math(`${positionCost.v} * ${leverage.v}`)
-            qty.setVal = math(`${positionLeveraged.v} / ${price.v}`)
+            qty.setVal = Math.max(0, math(`${positionLeveraged.v} / ${price.v}`))
             break
         default:
             // if Leverage, PositionCost or Price is changed
             positionLeveraged.setVal = math(`${positionCost.v} * ${leverage.v}`)
             qty.setVal = math(`${positionLeveraged.v} / ${price.v}`)
             break
-
     }
     
     liquidationPercentage.setVal = math(`1.00 / ${leverage.v}`)
 
-    if (long.v) { // long position
-        liquidationPriceHalf.setVal = math(`${price.v} * (1.00 - ${liquidationPercentage.v}/2)`)
-        liquidationPrice.setVal = math(`${price.v} * (1.00 - ${liquidationPercentage.v})`)
-        targetProfit1.setVal = math(`(${targetPrice1.v} - ${price.v}) * ${qty.v} * (1.00 - ${commissionRate.v})`)
-        targetProfit2.setVal = math(`${targetPrice2.v} - ${price.v}) * ${qty.v} * ( 1.00 - ${commissionRate.v})`)
-    } else { // short position
-        liquidationPriceHalf.setVal = math(`${price.v} * (1.00 + ${liquidationPercentage.v}/2)`)
-        liquidationPrice.setVal = math(`${price.v} * (1.00 + ${liquidationPercentage.v})`)
-        targetProfit1.setVal = math(`(${price.v} - ${targetPrice1.v}) * ${qty.v} * (1.00 - ${commissionRate.v})`)
-        targetProfit2.setVal = math(`${price.v} - ${targetPrice2.v}) * ${qty.v} * ( 1.00 - ${commissionRate.v})`)
+    // multiplier will be 1 for long positions and -1 for short positions 
+    let multiplier = long ? 1 : -1
+    if (latestInput !== liquidationPrice.id) {
+        // liquidation already set in switch
+        liquidationPrice.setVal = math(`${price.v} * (1.00 - ${liquidationPercentage.v} * ${multiplier})`)
     }
+    liquidationPriceHalf.setVal = math(`${price.v} * (1.00 - ${liquidationPercentage.v} * ${multiplier}/2)`)
+    targetProfit1.setVal = math(`(${targetPrice1.v} - ${price.v}) * ${qty.v} * (1.00 - ${commissionRate.v}) * ${multiplier}`)
+    targetProfit2.setVal = math(`(${targetPrice2.v} - ${price.v}) * ${qty.v} * ( 1.00 - ${commissionRate.v}) * ${multiplier}`)
 
     // set cookies
     let cookies = {
@@ -225,6 +217,28 @@ function getCookies() {
         targetPrice2.setVal = cookies['targetPrice2']
     }
 }
+
+
+
+// VARIABLES
+
+// Group 1 - white
+let price = new Variable('Price', 'input', 'white', 0.00, 'currency', 0, undefined, 0.01)
+let positionCost = new Variable('Position Cost', 'input', 'white', 0.00, 'currency', 0, undefined, 1)
+let leverage = new Variable('Leverage', 'input', 'white', 1, 'qty', 1, 150, 1)
+let positionLeveraged = new Variable('Cost Leveraged', 'output', 'white', 0.00, 'currency')
+let qty = new Variable('QTY', 'input', 'white', 0, 'qty', 0, undefined, 0.1)
+// Group 2 - red
+let liquidationPercentage = new Variable('Liquidation %', 'output', 'red', 0.00, 'percent')
+let liquidationPriceHalf = new Variable('Half loss at', 'output', 'red', 0.00, 'currency')
+let liquidationPrice = new Variable('Liquidation price', 'input', 'red', 0, 'currency', 0, undefined, 0.01)
+// Group 3 - green
+let targetPrice1 = new Variable('Target 1', 'input', 'green', 0.00, 'currency', 0, undefined, 0.01)
+let targetPrice2 = new Variable('Target 2', 'input', 'green', 0.00, 'currency', 0, undefined, 0.01)
+let targetProfit1 = new Variable('Gain at Target 1', 'output', 'green', 0.00, 'currency')
+let targetProfit2 = new Variable('Gain at Target 2', 'output', 'green', 0.00, 'currency')
+let long = {'v':true} // TODO: VARIABLE THIS
+let commissionRate = {'v': 0.01} // todo
 
 
 
