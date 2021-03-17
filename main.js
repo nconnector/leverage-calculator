@@ -149,12 +149,17 @@ function round(str, places) {
 
 function calculate(e) {
     console.log(`%clatest input: ${latestInput}`, 'color:white; background:#222; padding: 1px 2px')
+    
+    // multiplier will be 1 for long positions and -1 for short positions 
+    let multiplier = long.v ? 1 : -1
+    
     switch(latestInput) {
         case long.id:
             console.warn('long')
             long.v = long.v ? false : true
+            multiplier = long.v ? 1 : -1
             let label = document.querySelector(`#${long.id}_label`)
-            label.innerText = long.v ? "Long" : "Short"
+            label.innerText = long.v ? "Long " : "Short"
             break        
         case qty.id:
             // if QTY is changed
@@ -163,7 +168,8 @@ function calculate(e) {
             break
         case liquidationPrice.id:
             // if Liquidation Price is changed; calculating Leverage
-            leverage.setVal = Math.max(1, math(`1 / (1 - ${liquidationPrice.v} / ${price.v})`))
+            let delta = Math.abs(math(`1 - ${liquidationPrice.v} / ${price.v}`))
+            leverage.setVal = Math.max(1, math(`1 / ${delta}`))
             positionLeveraged.setVal = math(`${positionCost.v} * ${leverage.v}`)
             qty.setVal = Math.max(0, math(`${positionLeveraged.v} / ${price.v}`))
             break
@@ -176,8 +182,6 @@ function calculate(e) {
     
     liquidationPercentage.setVal = math(`1.00 / ${leverage.v}`)
 
-    // multiplier will be 1 for long positions and -1 for short positions 
-    let multiplier = long.v ? 1 : -1
     if (latestInput !== liquidationPrice.id) {
         // liquidation already set in switch
         liquidationPrice.setVal = math(`${price.v} * (1.00 - ${liquidationPercentage.v} * ${multiplier})`)
