@@ -150,6 +150,12 @@ function round(str, places) {
 function calculate(e) {
     console.log(`%clatest input: ${latestInput}`, 'color:white; background:#222; padding: 1px 2px')
     switch(latestInput) {
+        case long.id:
+            console.warn('long')
+            long.v = long.v ? false : true
+            let label = document.querySelector(`#${long.id}_label`)
+            label.innerText = long.v ? "Long" : "Short"
+            break        
         case qty.id:
             // if QTY is changed
             positionCost.setVal = math(`${price.v} * ${qty.v} / ${leverage.v}`)
@@ -171,7 +177,7 @@ function calculate(e) {
     liquidationPercentage.setVal = math(`1.00 / ${leverage.v}`)
 
     // multiplier will be 1 for long positions and -1 for short positions 
-    let multiplier = long ? 1 : -1
+    let multiplier = long.v ? 1 : -1
     if (latestInput !== liquidationPrice.id) {
         // liquidation already set in switch
         liquidationPrice.setVal = math(`${price.v} * (1.00 - ${liquidationPercentage.v} * ${multiplier})`)
@@ -237,7 +243,7 @@ let targetPrice1 = new Variable('Target 1', 'input', 'green', 0.00, 'currency', 
 let targetPrice2 = new Variable('Target 2', 'input', 'green', 0.00, 'currency', 0, undefined, 0.01)
 let targetProfit1 = new Variable('Gain at Target 1', 'output', 'green', 0.00, 'currency')
 let targetProfit2 = new Variable('Gain at Target 2', 'output', 'green', 0.00, 'currency')
-let long = {'v':true} // TODO: VARIABLE THIS
+let long = {'v': true, 'id': 'position_type'} // TODO: VARIABLE THIS
 let commissionRate = {'v': 0.01} // todo
 
 
@@ -251,6 +257,14 @@ calculate()
 
 // add listeners
 
+
+document.querySelector(`#${long.id}`).addEventListener('input', (e) => {
+    latestInput = e.target.id
+})
+
 for (inp of form.elements) {
-    inp.addEventListener('input', (e) => calculate(e, inp))
+    inp.addEventListener('input', (e) => {
+        calculate(e, inp)
+    })
+
 }

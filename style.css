@@ -3,6 +3,7 @@
     --bg2: #1f2630;
     --bg3: #29313c;
     --btn: rgb(133, 142, 157);
+    --btn2: #2196f3;
     --ylw: rgb(253, 194, 30);
     --red: rgb(246, 70, 93);
     --green: rgb(14, 203, 129);
@@ -37,6 +38,13 @@ body {
 
 h1 {
     font-size: 16px;
+}
+h2 {
+    font-size: 14px;
+    color: var(--text--secondary);
+}
+h1,
+h2 {
     padding: 0 5px;
     margin-bottom: 10px;
     text-align: center;
@@ -107,8 +115,11 @@ span.percent {
 }
 
 label,
-span:first-child {
+span {
     color: var(--text--secondary);
+}
+label,
+span:first-child {
     justify-self: end;
     padding-right: 0.4375rem;
 }
@@ -123,6 +134,57 @@ span:first-child {
 
 .yellow {
     color: var(--ylw);
+}
+
+/* slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 1.75rem;
+    height: 1.063rem;
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--green);
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+    border-radius: 0.25rem;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 0.75rem;
+    width: 0.75rem;
+    left: 0.25rem;
+    bottom: 0.188rem;
+    background-color: var(--text--primary);
+    -webkit-transition: 0.4s;
+    border-radius: 25%;
+    transition: 0.4s;
+}
+
+input:checked + .slider {
+    background-color: var(--red);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--red);
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(0.938rem);
+    -ms-transform: translateX(0.938rem);
+    transform: translateX(0.938rem);
 }
 
 @media only screen and (min-height: 750px) {

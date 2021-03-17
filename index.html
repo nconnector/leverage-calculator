@@ -17,6 +17,7 @@
             gtag("js", new Date());
             gtag("config", "G-02G8JY0Z8N");
         </script>
+        <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><text y="26" font-size="26">📈</text></svg>' />
     </head>
     <body>
         <div class="container">
@@ -24,13 +25,26 @@
                 <div class="group header">
                     <h1>Leverage Calculator</h1>
                     <span class="legend">
-                        This app will help you place a stop-loss order at the right price to avoid liquidation or calculate the appropriate Leverage, given the price
-                        point and desired liquidation point
+                        <ul>
+                            <li>Calculate projected returns at two targets: conservative and ambitious</li>
+                            <li>Calculate safe leverage with respect to Liquidation point</li>
+                            <li>Place a stop-loss order by calculating Liquidation point</li>
+                        </ul>
                     </span>
                 </div>
                 <div class="group white"></div>
                 <div class="group red"></div>
                 <div class="group green"></div>
+                <div class="group settings">
+                    <h2>Settings</h2>
+                    <span class="legend">
+                        <span id="position_type_label">Long</span>
+                        <label class="switch">
+                            <input id="position_type" type="checkbox" />
+                            <span class="slider round"></span>
+                        </label>
+                    </span>
+                </div>
             </form>
         </div>
     </body>
